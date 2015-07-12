@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/memberlist"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pokstad/go-couchdb"
-	"github.com/satori/go.uuid"
 )
 
 type jsonStruct struct {
@@ -45,7 +44,6 @@ type userFiles struct {
 			UserID string `json:"userid"`
 		} `json:"doc"`
 	} `json:"rows"`
-	Member member `json:"member"`
 }
 
 type userFilesActive struct {
@@ -58,7 +56,6 @@ type userFilesActive struct {
 			UserID string `json:"userid"`
 		} `json:"value"`
 	} `json:"rows"`
-	Member member `json:"member"`
 }
 
 // GetActiveFiles gets active files
@@ -98,7 +95,6 @@ func GetActiveFiles(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 
 	json.Unmarshal(body, &uf)
 
-	w.Header().Set("Content-type", "text/xml")
 	w.WriteHeader(200)
 	ufJSON, _ := json.Marshal(uf)
 	m, _ := mxj.NewMapJson(ufJSON)
@@ -121,7 +117,7 @@ func GetAllFiles(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	var uf userFiles
 
 	json.Unmarshal(body, &uf)
-	w.Header().Set("Content-type", "text/xml")
+
 	w.WriteHeader(200)
 	ufJSON, _ := json.Marshal(uf)
 	m, _ := mxj.NewMapJson(ufJSON)
@@ -145,7 +141,7 @@ func GetMemberFiles(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	var uf userFilesActive
 
 	json.Unmarshal(body, &uf)
-	w.Header().Set("Content-type", "text/xml")
+
 	w.WriteHeader(200)
 	ufJSON, _ := json.Marshal(uf)
 	m, _ := mxj.NewMapJson(ufJSON)
@@ -155,24 +151,7 @@ func GetMemberFiles(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 
 // GetMembers gets the list of members by redirecting to Scatter endpoint
 func GetMembers(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	resp, err := http.Get("http://localhost:3000/members")
-	if err != nil {
-		fmt.Println(err)
-		w.WriteHeader(500)
-		fmt.Fprint(w, err)
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(body))
-	var members []member
-	json.Unmarshal(body, &members)
-	w.Header().Set("Content-type", "text/xml")
-	w.WriteHeader(200)
-	ufJSON, _ := json.Marshal(members)
-	fmt.Println(string(ufJSON))
-	m, _ := mxj.NewMapJson(ufJSON)
-	xmlVal, _ := m.Xml()
-	fmt.Fprint(w, string(xmlVal))
+	http.Redirect(w, r, "http://localhost:3000/members", 301)
 }
 
 // ServeFileHandler /:id
@@ -207,7 +186,7 @@ func AddFileHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params)
 	db, _ := couchServer.CreateDB("files")
 	userID := memberlist.DefaultWANConfig().Name
 
-	_, err = db.Put(uuid.NewV4().String(), file{UUID: uuid.NewV4().String(), Fname: path.Base(js.Path), UserID: userID}, "")
+	_, err = db.Put(p.ByName("id"), file{UUID: p.ByName("id"), Fname: path.Base(js.Path), UserID: userID}, "")
 	if err != nil {
 		w.WriteHeader(500)
 		fmt.Fprint(w, err)

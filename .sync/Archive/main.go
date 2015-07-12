@@ -11,7 +11,7 @@ import (
 func main() {
 	router := httprouter.New()
 	router.GET("/file/:id", handlers.ServeFileHandler)
-	router.POST("/file", handlers.AddFileHandler)
+	router.POST("/file/:id", handlers.AddFileHandler)
 	router.DELETE("/file/:id", handlers.RemoveFileHandler)
 
 	router.GET("/members", handlers.GetMembers)
