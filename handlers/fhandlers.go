@@ -32,6 +32,19 @@ type file struct {
 	UserID string `json:"userid"`
 }
 
+type userFiles struct {
+	TotalFiles int `json:"totalfiles"`
+	Rows       []struct {
+		Key string `json:"string"`
+		Doc struct {
+			ID     string `json:"id"`
+			UUID   string `json:"uuid"`
+			Fname  string `json:"fname"`
+			UserID string `json:"userid"`
+		}
+	}
+}
+
 func GetActiveFiles(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	resp, err := http.Get("http://localhost:3000/members")
 	if err != nil {
@@ -52,14 +65,44 @@ func GetActiveFiles(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 	for _, memberDat := range members {
 		memberNames = append(memberNames, memberDat.Name)
 	}
+
 	memberJSON, _ := json.Marshal(memberNames)
 	query := url.QueryEscape(string(memberJSON))
-	http.Redirect(w, r, "http://localhost:5984/files/_design/design1/_view/userFiles?keys="+query, 301)
+	resp, err = http.Get("http://localhost:5984/files/_design/design1/_view/userFiles?keys=" + query)
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(500)
+		fmt.Fprint(w, err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+
+	var uf userFiles
+
+	json.Unmarshal(body, &uf)
+
+	w.WriteHeader(500)
+	fmt.Fprint(w, uf)
 }
 
 // GetAllFiles gets all files, active or not
 func GetAllFiles(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	http.Redirect(w, r, "http://localhost:5984/files/_all_docs?include_docs=true", 301)
+	fmt.Println("LOL")
+	resp, err := http.Get("http://localhost:5984/files/_all_docs?include_docs=true")
+	if err != nil {
+		fmt.Println(err)
+		w.WriteHeader(500)
+		fmt.Fprint(w, err)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+
+	var uf userFiles
+
+	json.Unmarshal(body, &uf)
+
+	w.WriteHeader(500)
+	fmt.Fprint(w, uf)
 }
 
 // GetMemberFiles get a member's files

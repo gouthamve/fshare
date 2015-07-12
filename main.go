@@ -21,5 +21,4 @@ func main() {
 	router.GET("/files/active", handlers.GetActiveFiles)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
-
 }
