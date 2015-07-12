@@ -33,18 +33,19 @@ type file struct {
 }
 
 type userFiles struct {
-	TotalFiles int `json:"totalfiles"`
+	TotalFiles int `json:"total_rows"`
 	Rows       []struct {
-		Key string `json:"string"`
+		Key string `json:"key"`
 		Doc struct {
-			ID     string `json:"id"`
+			ID     string `json:"_id"`
 			UUID   string `json:"uuid"`
 			Fname  string `json:"fname"`
 			UserID string `json:"userid"`
-		}
+		} `json:"doc"`
 	}
 }
 
+// GetActiveFiles gets active files
 func GetActiveFiles(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	resp, err := http.Get("http://localhost:3000/members")
 	if err != nil {
@@ -81,8 +82,9 @@ func GetActiveFiles(w http.ResponseWriter, r *http.Request, _ httprouter.Params)
 
 	json.Unmarshal(body, &uf)
 
-	w.WriteHeader(500)
-	fmt.Fprint(w, uf)
+	w.WriteHeader(200)
+	ufJSON, _ := json.Marshal(uf)
+	fmt.Fprint(w, string(ufJSON))
 }
 
 // GetAllFiles gets all files, active or not
@@ -101,8 +103,9 @@ func GetAllFiles(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 
 	json.Unmarshal(body, &uf)
 
-	w.WriteHeader(500)
-	fmt.Fprint(w, uf)
+	w.WriteHeader(200)
+	ufJSON, _ := json.Marshal(uf)
+	fmt.Fprint(w, string(ufJSON))
 }
 
 // GetMemberFiles get a member's files
